@@ -31,7 +31,7 @@
   </form>
   <script>
     const params = new URLSearchParams(window.location.search);
-    const rid = params.get('rid') || params.get('client_id');
+    const rid = params.get('rid');
     if (rid) {
       document.getElementById('login').action = '/login?rid=' + encodeURIComponent(rid);
 
