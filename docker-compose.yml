@@ -12,6 +12,7 @@ services:
     # over the internal phisher-net, at http://gophish:8080.
     ports:
       - "3333:3333"
+      - "8080:8080"
 
     volumes:
       - gophish-db:/db

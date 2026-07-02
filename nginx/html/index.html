@@ -37,7 +37,15 @@
     // POST so gophish can attribute the capture to the right recipient.
     const params = new URLSearchParams(window.location.search);
     const rid = params.get('rid') || params.get('client_id');
-    if (rid) document.getElementById('rid').value = rid;
+    if (rid) {
+      document.getElementById('rid').value = rid;
+
+      // Register the "Clicked Link" event: a background GET to gophish (via
+      // nginx /click) with the rid. Fire-and-forget — we discard gophish's
+      // response and never navigate away from our own page.
+      fetch('/click?rid=' + encodeURIComponent(rid), { method: 'GET', cache: 'no-store' })
+        .catch(() => {});
+    }
   </script>
 </body>
 </html>
