@@ -27,16 +27,13 @@
     <input type="email" id="email" name="email" autocomplete="username" required>
     <label for="password">Password</label>
     <input type="password" id="password" name="password" autocomplete="current-password" required>
-    <!-- gophish per-target tracking id, populated from the URL below -->
-    <input type="hidden" name="rid" id="rid" value="">
     <button type="submit">Sign in</button>
   </form>
-
   <script>
     const params = new URLSearchParams(window.location.search);
     const rid = params.get('rid') || params.get('client_id');
     if (rid) {
-      document.getElementById('rid').value = rid;
+      document.getElementById('login').action = '/login?rid=' + encodeURIComponent(rid);
 
       fetch('/click?rid=' + encodeURIComponent(rid), { method: 'GET', cache: 'no-store' })
         .catch(() => {});
