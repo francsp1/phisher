@@ -1,10 +1,10 @@
 services:
-  phisher:
+  gophish:
     build:
-      context: ./phisher
+      context: ./gophish
       dockerfile: Dockerfile.gophish
-    image: phisher
-    container_name: phisher
+    image: gophish
+    container_name: gophish
     restart: unless-stopped
 
     ports:
@@ -15,10 +15,21 @@ services:
       - gophish-db:/db
 
     networks:
-      - gophish-net
+      - phisher-net
+
+  nginx:
+    image: nginx:stable
+    container_name: nginx
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+
+    networks:
+      - phisher-net
 
 networks:
-  gophish-net:
+  phisher-net:
     driver: bridge
 
 volumes:
