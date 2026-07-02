@@ -7,10 +7,12 @@ services:
     container_name: gophish
     restart: unless-stopped
 
+    # Admin panel stays published (per your choice). The phish server
+    # (8080) is intentionally NOT published — only nginx can reach it,
+    # over the internal phisher-net, at http://gophish:8080.
     ports:
       - "3333:3333"
-      - "8080:8080"
-      
+
     volumes:
       - gophish-db:/db
 
@@ -21,9 +23,15 @@ services:
     image: nginx:stable
     container_name: nginx
     restart: unless-stopped
+    depends_on:
+      - gophish
 
     ports:
       - "80:80"
+
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
 
     networks:
       - phisher-net

