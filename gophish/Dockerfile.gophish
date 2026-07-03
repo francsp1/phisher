@@ -1,4 +1,6 @@
 # ---- Builder stage ----
+# Assembles the complete /opt/gophish tree (binary, assets, config) with the
+# final permissions already set, so the runtime stage is a single COPY.
 FROM debian:stable-slim AS builder
 
 ARG GOPHISH_VERSION=0.12.1
@@ -9,45 +11,36 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /tmp/gophish
+WORKDIR /opt/gophish
 
 RUN wget -q https://github.com/gophish/gophish/releases/download/v${GOPHISH_VERSION}/gophish-v${GOPHISH_VERSION}-linux-64bit.zip \
- && unzip gophish-v${GOPHISH_VERSION}-linux-64bit.zip \
- && rm gophish-v${GOPHISH_VERSION}-linux-64bit.zip
+ && unzip -q gophish-v${GOPHISH_VERSION}-linux-64bit.zip \
+ && rm gophish-v${GOPHISH_VERSION}-linux-64bit.zip \
+ && chmod 500 gophish
+
+COPY config.json /opt/gophish/config.json
 
 # ---- Final stage ----
 FROM debian:stable-slim
 
-ENV GOPHISH_HOME=/opt/gophish
-
-# Install only what's needed
+# CA certs (for SMTP TLS) + non-root user + writable DB dir, in one layer.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
- && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd -r -m -d /opt/gophish -s /usr/sbin/nologin gophish-user \
+ && mkdir -p /db \
+ && chown gophish-user:gophish-user /db
 
-# Create non-root user
-RUN useradd -r -m -d ${GOPHISH_HOME} -s /usr/sbin/nologin gophish
+WORKDIR /opt/gophish
 
-# Create directories
-RUN mkdir -p ${GOPHISH_HOME} /db \
- && chown -R gophish:gophish ${GOPHISH_HOME} /db
+# Single copy: --chown sets ownership and the source's mode 500 is preserved,
+# so no extra chown/chmod layers (which would each duplicate the 21MB binary).
+COPY --from=builder --chown=gophish-user:gophish-user /opt/gophish /opt/gophish
 
-WORKDIR ${GOPHISH_HOME}
-
-# Copy only necessary files from builder
-COPY --from=builder /tmp/gophish/. ${GOPHISH_HOME}/
-
-COPY config.json ${GOPHISH_HOME}/config.json
-
-# Permissions
-RUN chown -R gophish:gophish ${GOPHISH_HOME} \
- && chmod 500 ${GOPHISH_HOME}/gophish
-
-USER gophish
+USER gophish-user
 
 VOLUME ["/db"]
 
 EXPOSE 3333 8080
 
-# Use exec form (no env expansion needed)
 CMD ["/opt/gophish/gophish"]
